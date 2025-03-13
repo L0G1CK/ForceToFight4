@@ -3,10 +3,12 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity Web Player | ForceToFight</title>
+    <title>ForceToFight | Telegram Mini App</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
     <link rel="manifest" href="manifest.webmanifest">
+    <!-- Подключаем Telegram WebApp API -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
   </head>
   <body>
     <div id="unity-container">
@@ -17,27 +19,40 @@
           <div id="unity-progress-bar-full"></div>
         </div>
       </div>
-      <div id="unity-warning"> </div>
+      <div id="unity-warning"></div>
     </div>
     <script>
+      // Инициализация Telegram WebApp
+      const tg = window.Telegram.WebApp;
+
+      // Получение данных пользователя
+      const user = tg.initDataUnsafe.user;
+
+      // Передача данных в Unity через URL
+      if (user) {
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('user_id', user.id);
+        urlParams.set('username', user.username || '');
+        urlParams.set('first_name', user.first_name || '');
+        urlParams.set('last_name', user.last_name || '');
+        urlParams.set('photo_url', user.photo_url || '');
+        window.location.search = urlParams.toString();
+      }
+
+      // Регистрация Service Worker (если нужно)
       window.addEventListener("load", function () {
         if ("serviceWorker" in navigator) {
           navigator.serviceWorker.register("ServiceWorker.js");
         }
       });
 
+      // Настройка Unity WebGL
       var container = document.querySelector("#unity-container");
       var canvas = document.querySelector("#unity-canvas");
       var loadingBar = document.querySelector("#unity-loading-bar");
       var progressBarFull = document.querySelector("#unity-progress-bar-full");
       var warningBanner = document.querySelector("#unity-warning");
 
-      // Shows a temporary message banner/ribbon for a few seconds, or
-      // a permanent error message on top of the canvas if type=='error'.
-      // If type=='warning', a yellow highlight color is used.
-      // Modify or remove this function to customize the visually presented
-      // way that non-critical warnings and error messages are presented to the
-      // user.
       function unityShowBanner(msg, type) {
         function updateBannerVisibility() {
           warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
@@ -57,12 +72,12 @@
       }
 
       var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/RussianCryptoCat.loader.js";
+      var loaderUrl = buildUrl + "/ForceToFight.loader.js";
       var config = {
         arguments: [],
-        dataUrl: buildUrl + "/RussianCryptoCat.data",
-        frameworkUrl: buildUrl + "/RussianCryptoCat.framework.js",
-        codeUrl: buildUrl + "/RussianCryptoCat.wasm",
+        dataUrl: buildUrl + "/ForceToFight.data",
+        frameworkUrl: buildUrl + "/ForceToFight.framework.js",
+        codeUrl: buildUrl + "/ForceToFight.wasm",
         streamingAssetsUrl: "StreamingAssets",
         companyName: "RussianCryptoCat",
         productName: "ForceToFight",
@@ -70,15 +85,8 @@
         showBanner: unityShowBanner,
       };
 
-      // By default Unity keeps WebGL canvas render target size matched with
-      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
-      // Set this to false if you want to decouple this synchronization from
-      // happening inside the engine, and you would instead like to size up
-      // the canvas DOM size and WebGL render target sizes yourself.
-      // config.matchWebGLToCanvasSize = false;
-
+      // Адаптация для мобильных устройств
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        // Mobile device style: fill the whole browser client area with the game canvas:
         var meta = document.createElement('meta');
         meta.name = 'viewport';
         meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
